@@ -15,9 +15,16 @@ type ValueIdentifier = String
 type TypeBinding  = (ValueIdentifier, Type)
 type ValueBinding = (ValueIdentifier, Value)
 
+-- I/O Primitives
+data IOPrimOp
+  = GetLine
+  | Print
+  | ReadFile
+  deriving (Eq, Show)
+
 -- Core data types
 data Type
-  = TInt | TChar
+  = TInt | TChar | TStr
   | Fn [Type] Type
   | TCon TConIdentifier
   deriving (Eq, Show)
@@ -31,6 +38,7 @@ data Pattern
   | PCon VConIdentifier [Pattern]
   | PIntLit Integer
   | PCharLit Char
+  | PStrLit String
   | PWildcard
   deriving (Eq, Show)
 
@@ -38,14 +46,18 @@ data Op
   = Plus
   | Mult
   | Minus
+  | StrLen
+  | StrHead
+  | StrTail
   deriving (Eq, Show)
 
 data Expr
   = Var ValueIdentifier
   | Abs [TypeBinding] Expr
   | App Expr [Expr]
-  | LInt Integer | LChar Char
+  | LInt Integer | LChar Char | LStr String
   | Prim Op
+  | IOPrim IOPrimOp
   | LetData TConIdentifier [(VConIdentifier, Type)] Expr
   | EVCon VConIdentifier
   | Match Expr [(Pattern, Expr)]
@@ -59,7 +71,7 @@ data Decl
 type Program = [Decl]
 
 data Value
-  = VInt Integer | VChar Char
+  = VInt Integer | VChar Char | VStr String
   | VLamClosure [ValueIdentifier] Expr EvalContext
   | VRecClosure ValueIdentifier [ValueIdentifier] Expr EvalContext
   | VCon VConIdentifier
@@ -69,6 +81,7 @@ data Value
 instance Show Value where
   show (VInt n)  = show n
   show (VChar c) = show c
+  show (VStr s) = show s
   show (VLamClosure args body env) = "lambda{"++show args++". "++show body++" -| "++show env++"}"
   show (VRecClosure name args body env) = "rec["++name++"]{"++show args++". "++show body++" -| "++show env++"}"
   show (VCon name) = name

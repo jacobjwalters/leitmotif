@@ -15,6 +15,8 @@ keywords =
   , "Int", "Char"
   , "letdata", "in"
   , "match", "with"
+  , "strLen", "strHead", "strTail"
+  , "__getLine", "__print", "__readFile"
   ]
 
 valueId :: Parser ValueIdentifier
@@ -85,9 +87,10 @@ bindingTypeSig = do
   pure undefined
 
 -- Patterns
-pintlit, pcharlit :: Parser Pattern
+pintlit, pcharlit, pstrlit :: Parser Pattern
 pintlit  = PIntLit  <$> integer
 pcharlit = PCharLit <$> charLiteral
+pstrlit  = PStrLit  <$> stringLiteral
 
 pvar :: Parser Pattern
 pvar = PVar <$> valueId
@@ -99,7 +102,7 @@ pcon = PCon <$> vconId
 pattern :: Parser Pattern
 pattern = "pattern" ?> choice
   [ symbol "_" *> pure PWildcard
-  , pintlit, pcharlit
+  , pintlit, pcharlit, pstrlit
   , pcon
   , pvar
   , parens pattern
@@ -107,17 +110,32 @@ pattern = "pattern" ?> choice
 
 
 -- Expressions
-primOp :: Parser Expr
-primOp = Prim <$> choice
+ioPrim, unaryPrim, binaryPrim :: Parser Expr
+ioPrim = IOPrim <$> choice
+  [ symbol "__getLine"  *> pure GetLine
+  , symbol "__print"    *> pure Print
+  , symbol "__readFile" *> pure ReadFile
+  ]
+unaryPrim = Prim <$> choice
+  [ symbol "strLen"  *> pure StrLen
+  , symbol "strHead" *> pure StrHead
+  , symbol "strTail" *> pure StrTail
+  ]
+binaryPrim = Prim <$> choice
   [ symbol "+" *> pure Plus
   , symbol "*" *> pure Mult
   , symbol "-" *> pure Minus
   ]
+unaryOp :: Parser Expr
+unaryOp = do
+  op <- unaryPrim
+  e <- expr
+  pure $ App op [e]
 
 binaryOp :: Parser Expr
 binaryOp = do
   l <- expr'
-  op <- primOp
+  op <- binaryPrim
   r <- expr
   pure $ App op [l, r]
 
@@ -182,6 +200,8 @@ expr' :: Parser Expr
 expr' = "expression (prime)" ?> choice
   [ LInt  <$> integer
   , LChar <$> charLiteral
+  , LStr  <$> stringLiteral
+  , unaryOp
   , lambda
   , letdata
   , match

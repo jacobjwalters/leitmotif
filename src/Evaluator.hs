@@ -47,6 +47,11 @@ eval env (App (Prim op) xs) = do
     (Plus,  [VInt x, VInt y]) -> Right $ VInt $ x + y
     (Mult,  [VInt x, VInt y]) -> Right $ VInt $ x * y
     (Minus, [VInt x, VInt y]) -> Right $ VInt $ x - y
+
+    (StrLen,  [VStr s]) -> Right $ VInt $ toInteger $ length s
+    (StrHead, [VStr s])  -> Right $ VChar $ head s
+    (StrTail, [VStr ""]) -> Right $ VStr  $ ""
+    (StrTail, [VStr s])  -> Right $ VStr  $ tail s
     _ -> Left TypeError
 
 eval env (App f xs) = do
@@ -64,6 +69,7 @@ eval env (App f xs) = do
 
 eval _ (LInt  n) = Right $ VInt n
 eval _ (LChar c) = Right $ VChar c
+eval _ (LStr  s) = Right $ VStr s
 
 eval _ (Prim op) = Left $ UnappliedPrimOp op
 

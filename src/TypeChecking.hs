@@ -23,8 +23,10 @@ combinePatternChecks (Right ctx : cs) = case combinePatternChecks cs of
 checkPattern :: Context -> Type -> Pattern -> Either [TypeCheckError] TypeContext
 checkPattern _ TInt  (PIntLit  _) = Right []
 checkPattern _ TChar (PCharLit _) = Right []
+checkPattern _ TStr  (PStrLit  _) = Right []
 checkPattern _ ty (PIntLit  _) = Left [TypeMismatch TInt  ty]
 checkPattern _ ty (PCharLit _) = Left [TypeMismatch TChar ty]
+checkPattern _ ty (PStrLit _)  = Left [TypeMismatch TStr  ty]
 
 checkPattern _ ty (PVar x)  = Right [(x, ty)]
 checkPattern _ _  PWildcard = Right []
@@ -70,10 +72,15 @@ synth ctx (App f xs) = case (synth ctx f, traverse (synth ctx) xs) of
 
 synth _ (LInt _) = Right TInt
 synth _ (LChar _) = Right TChar
+synth _ (LStr _) = Right TStr
 
 synth _ (Prim Plus)  = Right $ Fn [TInt, TInt] TInt
 synth _ (Prim Mult)  = Right $ Fn [TInt, TInt] TInt
 synth _ (Prim Minus) = Right $ Fn [TInt, TInt] TInt
+
+synth _ (Prim StrLen)  = Right $ Fn [TStr] TInt
+synth _ (Prim StrHead) = Right $ Fn [TStr] TChar
+synth _ (Prim StrTail) = Right $ Fn [TStr] TStr
 
 synth (gamma, delta) (LetData tcon vcons e) =
   let newTcon = not $ tcon `elem` delta
