@@ -1,0 +1,2 @@
+fib : Int -> Int
+  = lambda x. fib1 x 0
