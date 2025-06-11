@@ -2,8 +2,6 @@ module Evaluator where
 
 import Types
 
-import System.IO.Unsafe
-
 import Data.Bifunctor (second)
 
 pair :: a -> b -> (a, b)
