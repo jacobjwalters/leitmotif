@@ -2,6 +2,6 @@ fac : (x : Int) -> Int
 = match x with
   | 0 => 1
   | n => n * (fac (n - 1))
+  ;
 
-main : Int
-= fac 100
+main : Int = fac 6

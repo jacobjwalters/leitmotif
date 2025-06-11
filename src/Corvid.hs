@@ -17,12 +17,12 @@ import Text.Trifecta.Result (Result(Failure, Success))
 
 parseExpr :: String -> Either Error Expr
 parseExpr input = case P.parseExpr input of
-  Failure err -> Left $ PE [EOF $ show err]
+  Failure err -> Left $ PE [Trifecta err]
   Success e -> Right e
 
 parseProgram :: String -> Either Error Program
 parseProgram input = case P.parseProgram input of
-  Failure err -> Left $ PE [EOF $ show err]
+  Failure err -> Left $ PE [Trifecta err]
   Success e -> Right e
 
 typecheckExpr :: Context -> String -> Either Error Type

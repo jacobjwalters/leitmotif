@@ -97,6 +97,7 @@ executable corvid
     build-depends:
                   base ^>=4.17.2.1,
                   corvid,
+                  trifecta ^>= 2.1.4,
                   mtl >= 2.2.2
 
     -- Directories containing source files.

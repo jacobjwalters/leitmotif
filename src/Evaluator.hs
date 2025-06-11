@@ -38,6 +38,7 @@ match _ _ = Nothing
 eval :: EvalContext -> Expr -> Either EvalError Value
 eval (vs,_) (Var x) = case lookup x vs of
   Nothing -> Left $ ScopeError x
+  Just (VRecClosure _ [] b env) -> eval env b
   Just v  -> Right v
 
 eval env (Abs args b) = Right $ VLamClosure (fst <$> args) b env
@@ -102,5 +103,6 @@ runProgram :: Program -> Either EvalError Value
 runProgram p = do
   (vs, _) <- evalProgram ([],[]) p
   case lookup "main" vs of
+    Just (VRecClosure _ [] b env) -> eval env b
     Just v  -> Right v
     Nothing -> Left NoMain

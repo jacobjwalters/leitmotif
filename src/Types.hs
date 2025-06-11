@@ -4,6 +4,8 @@ import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 
+import Text.Trifecta.Result (ErrInfo)
+
 -- Identifiers
 type TConIdentifier = String
 type VConIdentifier = String
@@ -62,7 +64,15 @@ data Value
   | VRecClosure ValueIdentifier [ValueIdentifier] Expr EvalContext
   | VCon VConIdentifier
   | VData VConIdentifier [Value]
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show Value where
+  show (VInt n)  = show n
+  show (VChar c) = show c
+  show (VLamClosure args body env) = "lambda{"++show args++". "++show body++" -| "++show env++"}"
+  show (VRecClosure name args body env) = "rec["++name++"]{"++show args++". "++show body++" -| "++show env++"}"
+  show (VCon name) = name
+  show (VData name args) = name ++ " " ++ show args
 
 -- Contexts
 type VConArity = (VConIdentifier, Int)
@@ -74,8 +84,9 @@ type Context = (TypeContext, KindContext)
 -- Errors
 data ParseError
   = EOF String
+  | Trifecta ErrInfo
   | UnexpectedClosingBracket
-  deriving (Eq, Show)
+  deriving (Show)
 
 data TypeCheckError
   = AnnotateWithName String TypeCheckError
@@ -119,4 +130,4 @@ data Error
   = PE  [ParseError]
   | TCE [TypeCheckError]
   | EvE [EvalError]
-  deriving (Eq, Show)
+  deriving (Show)

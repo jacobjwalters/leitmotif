@@ -3,8 +3,10 @@ module Main where
 import System.Environment (getArgs)
 import System.IO (hSetBuffering, BufferMode(NoBuffering), stdout, hFlush)
 
+import Text.Trifecta.Result (ErrInfo(_errDoc))
+
 import Corvid (evaluateProgram, evaluateExpr, executeProgram)
-import Types (Context, EvalContext)
+import Types (Context, EvalContext, Error(..), ParseError(Trifecta))
 
 repl :: (Context, EvalContext) -> IO ()
 repl (ctx, env) = do
@@ -19,7 +21,8 @@ replFile :: String -> IO ()
 replFile filename = do
   str <- readFile filename
   case evaluateProgram str of
-    Left err  -> print err
+    Left (PE [Trifecta err]) -> print $ _errDoc err
+    Left err      -> print err
     Right env -> putStrLn ("Loaded " ++ filename) >> repl env
 
 exec :: String -> IO ()

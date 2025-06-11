@@ -151,6 +151,7 @@ letdata = "let data" ?> do
 match s with
 | pattern => expr
 | ...
+;
 -}
 
 match :: Parser Expr
@@ -159,9 +160,10 @@ match = "match" ?> do
   scrutinee <- expr
   _ <- symbol "with"
   cases <- some parseCase
+  _ <- symbol ";"
   pure $ Match scrutinee cases
   where parseCase :: Parser (Pattern, Expr)
-        parseCase = do
+        parseCase = "match branch" ?> do
           _ <- symbol "|"
           p <- pattern
           _ <- symbol "=>"
@@ -194,7 +196,7 @@ expr = "expression" ?> choice
   ]
 
 adtDecl :: Parser Decl
-adtDecl = do
+adtDecl = "data declaration" ?> do
   _ <- symbol "data"
   name <- tconId
   _ <- symbol "="
@@ -209,7 +211,7 @@ adtDecl = do
           pure (name, if args /= [] then Fn (map fst args) ret else ret)
 
 fnDecl :: Parser Decl
-fnDecl = do
+fnDecl = "function declaration" ?> do
   name <- valueId
   _ <- symbol ":"
   (ty, bindings) <- parseType
@@ -218,7 +220,7 @@ fnDecl = do
   pure $ FnDecl name ty bindings body
 
 decl :: Parser Decl
-decl = adtDecl <|> fnDecl
+decl = "declaration" ?> (adtDecl <|> fnDecl)
 
 program :: Parser Program
 program = many decl <* eof
