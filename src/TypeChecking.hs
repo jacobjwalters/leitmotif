@@ -82,6 +82,11 @@ synth _ (Prim StrLen)  = Right $ Fn [TStr] TInt
 synth _ (Prim StrHead) = Right $ Fn [TStr] TChar
 synth _ (Prim StrTail) = Right $ Fn [TStr] TStr
 
+synth _ (Prim (IOP GetLine))  = Right $ PrimIOTy TStr
+synth _ (Prim (IOP Print))    = Right $ Fn [TStr] (PrimIOTy TStr)  -- Should be unit, but since we don't have polymorphism...
+synth _ (Prim (IOP ReadFile)) = Right $ Fn [TStr] (PrimIOTy TStr)
+synth _ (Prim (IOP IOSeq))    = Right $ Fn [PrimIOTy TStr, PrimIOTy TStr] (PrimIOTy TStr)
+
 synth (gamma, delta) (LetData tcon vcons e) =
   let newTcon = not $ tcon `elem` delta
       newVcons = all (\(vcon,_) -> not $ vcon `elem` (fst <$> gamma)) vcons

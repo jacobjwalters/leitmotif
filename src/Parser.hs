@@ -110,29 +110,39 @@ pattern = "pattern" ?> choice
 
 
 -- Expressions
-ioPrim, unaryPrim, binaryPrim :: Parser Expr
-ioPrim = IOPrim <$> choice
-  [ symbol "__getLine"  *> pure GetLine
-  , symbol "__print"    *> pure Print
-  , symbol "__readFile" *> pure ReadFile
+nullaryPrim, unaryPrim, binaryPrim :: Parser Expr
+nullaryPrim = Prim <$> choice
+  [ -- IO
+    symbol "__getLine"  *> pure (IOP GetLine)
   ]
 unaryPrim = Prim <$> choice
-  [ symbol "strLen"  *> pure StrLen
+  [ -- Strings
+    symbol "strLen"  *> pure StrLen
   , symbol "strHead" *> pure StrHead
   , symbol "strTail" *> pure StrTail
+
+    -- IO
+  , symbol "__print"    *> pure (IOP Print)
+  , symbol "__readFile" *> pure (IOP ReadFile)
   ]
 binaryPrim = Prim <$> choice
-  [ symbol "+" *> pure Plus
+  [ -- Numerics
+    symbol "+" *> pure Plus
   , symbol "*" *> pure Mult
   , symbol "-" *> pure Minus
+
+    -- IO
+  , symbol "__IOSeq" *> pure (IOP IOSeq)
   ]
-unaryOp :: Parser Expr
+
+nullaryOp, unaryOp, binaryOp :: Parser Expr
+nullaryOp = nullaryPrim
+
 unaryOp = do
   op <- unaryPrim
   e <- expr
   pure $ App op [e]
 
-binaryOp :: Parser Expr
 binaryOp = do
   l <- expr'
   op <- binaryPrim
@@ -201,6 +211,7 @@ expr' = "expression (prime)" ?> choice
   [ LInt  <$> integer
   , LChar <$> charLiteral
   , LStr  <$> stringLiteral
+  , nullaryOp
   , unaryOp
   , lambda
   , letdata

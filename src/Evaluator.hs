@@ -52,6 +52,11 @@ eval env (App (Prim op) xs) = do
     (StrHead, [VStr s])  -> Right $ VChar $ head s
     (StrTail, [VStr ""]) -> Right $ VStr  $ ""
     (StrTail, [VStr s])  -> Right $ VStr  $ tail s
+
+    (IOP Print, [VStr s]) -> Right $ VIOP $ VPrint s
+    (IOP ReadFile, [VStr s]) -> Right $ VIOP $ VReadFile s
+    (IOP IOSeq, [VIOP l, VIOP r]) -> do
+      Right $ VIOP $ VIOSeq l r
     _ -> Left TypeError
 
 eval env (App f xs) = do
@@ -70,6 +75,8 @@ eval env (App f xs) = do
 eval _ (LInt  n) = Right $ VInt n
 eval _ (LChar c) = Right $ VChar c
 eval _ (LStr  s) = Right $ VStr s
+
+eval _ (Prim (IOP GetLine)) = Right $ VIOP VGetLine
 
 eval _ (Prim op) = Left $ UnappliedPrimOp op
 
@@ -102,6 +109,13 @@ evalProgram env [] = Right env
 evalProgram env (decl:decls) = do
   env' <- evalDecl env decl
   evalProgram env' decls
+
+exec :: Value -> IO Value
+exec (VIOP (VGetLine)) = VStr <$> getLine
+exec (VIOP (VPrint s)) = putStr s >> pure (VStr s)
+exec (VIOP (VReadFile s)) = VStr <$> readFile s
+exec (VIOP (VIOSeq l r)) = exec (VIOP l) >> exec (VIOP r)
+exec v = pure v
 
 runProgram :: Program -> Either EvalError Value
 runProgram p = do
