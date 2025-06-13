@@ -4,4 +4,4 @@ fac : (x : Int) -> Int
   | n => n * (fac (n - 1))
   ;
 
-main : Int = fac 6
+main : Int = fac 10000
