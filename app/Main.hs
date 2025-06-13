@@ -5,13 +5,13 @@ import System.IO (hSetBuffering, BufferMode(NoBuffering), stdout, hFlush)
 
 import Text.Trifecta.Result (ErrInfo(_errDoc))
 
-import Corvid (evaluateProgram, evaluateExpr, executeProgram)
+import Leitmotif (evaluateProgram, evaluateExpr, executeProgram)
 import Types (Context, EvalContext, Error(..), ParseError(Trifecta))
 
 repl :: (Context, EvalContext) -> IO ()
 repl (ctx, env) = do
   hSetBuffering stdout NoBuffering
-  putStr "corvid> "
+  putStr "leitmotif> "
   str <- getLine
   case evaluateExpr ctx env str of
     Left  err -> print err >> repl (ctx, env)
@@ -37,7 +37,7 @@ handleArgs ["help"] = putStrLn "There is no hope."
 handleArgs ["repl"] = repl (([],[]), ([],[]))
 handleArgs ["repl", filename] = replFile filename
 handleArgs ["exec", filename] = exec filename
-handleArgs args = putStrLn $ "Unknown arguments. Run `corvid help` for help. Args: " ++ show args
+handleArgs args = putStrLn $ "Unknown arguments. Run `leitmotif help` for help. Args: " ++ show args
 
 main :: IO ()
 main = do

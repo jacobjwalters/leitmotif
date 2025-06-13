@@ -1,4 +1,4 @@
-module Corvid
+module Leitmotif
   ( module P
   , module TypeChecking
   , parseExpr, parseProgram
