@@ -32,12 +32,23 @@ exec filename = do
     Left err -> print err
     Right v -> print v
 
+helpString :: String
+helpString = unlines
+  [ "Leitmotif v0.1.0.0"
+  , "Usage:"
+  , "leitmotif help                Display this message"
+  , "leitmotif repl                Enter an empty REPL session"
+  , "leitmotif repl <filename>     Enter an REPL session, loading the definitions from <filename>"
+  , "leitmotif exec <filename>     Load the definitions from <filename>, and then run `main`"
+  ]
+
 handleArgs :: [String] -> IO ()
-handleArgs ["help"] = putStrLn "There is no hope."
+handleArgs [] = putStrLn helpString
+handleArgs ["help"] = putStrLn helpString
 handleArgs ["repl"] = repl (([],[]), ([],[]))
 handleArgs ["repl", filename] = replFile filename
 handleArgs ["exec", filename] = exec filename
-handleArgs args = putStrLn $ "Unknown arguments. Run `leitmotif help` for help. Args: " ++ show args
+handleArgs args = putStrLn $ "Unknown arguments. Args: " ++ show args ++ "\n" ++ helpString
 
 main :: IO ()
 main = do
