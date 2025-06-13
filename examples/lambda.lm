@@ -1,0 +1,38 @@
+data Term
+= Var String
+| Abs String Term
+| App Term Term
+;
+
+id : Term
+= Abs "x" (Var "x")
+;
+
+data MaybeVar
+= Just Term
+| Nothing
+;
+
+data Context
+= Cons String Term Context
+| Nil
+;
+
+lookup : (x : String) -> (ctx : Context) -> MaybeString
+= match ctx with
+| Cons v t ctx1 => match (x ==s v) with
+  | True => Just t
+  | False => lookup x ctx1  -- this doesn't parse correctly; parses as `lookup (x ctx1)`
+  ;
+| Nil => Nothing
+;;
+
+eval : (ctx : Context) -> (t : Term) -> Term
+= match t with
+| Var x => match (lookup x ctx) with
+  | Just t => eval ctx t
+  | Nothing => Var x
+  ;
+| App (Abs x b) t => eval (Cons x t ctx) b
+| _ => t
+;;

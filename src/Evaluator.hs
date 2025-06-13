@@ -75,6 +75,7 @@ eval env (App f xs) = do
 eval _ (LInt  n) = Right $ VInt n
 eval _ (LChar c) = Right $ VChar c
 eval _ (LStr  s) = Right $ VStr s
+eval _ (LBool b) = Right $ VBool b
 
 eval _ (Prim (IOP GetLine)) = Right $ VIOP VGetLine
 

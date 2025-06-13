@@ -12,7 +12,7 @@ name ?> parser = parser <?> name
 keywords :: [String]
 keywords =
   [ "lambda", "λ"
-  , "Int", "Char"
+  , "Int", "Char", "String", "Bool"
   , "letdata", "in"
   , "match", "with"
   , "strLen", "strHead", "strTail"
@@ -61,8 +61,10 @@ parseType' = choice
   , try $ do
       tc <- tcon
       pure (tc, [])
-  , symbol "Int"  *> pure (TInt,  [])
-  , symbol "Char" *> pure (TChar, [])
+  , symbol "Int"    *> pure (TInt,  [])
+  , symbol "Char"   *> pure (TChar, [])
+  , symbol "String" *> pure (TStr,  [])
+  , symbol "Bool"   *> pure (TBool, [])
   ]
 
 parseType :: Parser (Type, [TypeBinding])
@@ -87,10 +89,14 @@ bindingTypeSig = do
   pure undefined
 
 -- Patterns
-pintlit, pcharlit, pstrlit :: Parser Pattern
+pintlit, pcharlit, pstrlit, pboollit :: Parser Pattern
 pintlit  = PIntLit  <$> integer
 pcharlit = PCharLit <$> charLiteral
 pstrlit  = PStrLit  <$> stringLiteral
+pboollit = choice
+  [ symbol "True"  >> pure (PBoolLit True)
+  , symbol "False" >> pure (PBoolLit False)
+  ]
 
 pvar :: Parser Pattern
 pvar = PVar <$> valueId
@@ -102,7 +108,7 @@ pcon = PCon <$> vconId
 pattern :: Parser Pattern
 pattern = "pattern" ?> choice
   [ symbol "_" *> pure PWildcard
-  , pintlit, pcharlit, pstrlit
+  , pintlit, pcharlit, pstrlit, pboollit
   , pcon
   , pvar
   , parens pattern
@@ -112,7 +118,7 @@ pattern = "pattern" ?> choice
 -- Expressions
 nullaryPrim, unaryPrim, binaryPrim :: Parser Expr
 nullaryPrim = Prim <$> choice
-  [ -- IO
+  [-- IO
     symbol "__getLine"  *> pure (IOP GetLine)
   ]
 unaryPrim = Prim <$> choice
@@ -126,10 +132,14 @@ unaryPrim = Prim <$> choice
   , symbol "__readFile" *> pure (IOP ReadFile)
   ]
 binaryPrim = Prim <$> choice
-  [ -- Numerics
-    symbol "+" *> pure Plus
+  [ -- Strings
+    symbol "==s" *> pure StrEq
+
+    -- Numerics
+  , symbol "+" *> pure Plus
   , symbol "*" *> pure Mult
   , symbol "-" *> pure Minus
+  , symbol "==" *> pure NumEq
 
     -- IO
   , symbol "__IOSeq" *> pure (IOP IOSeq)
@@ -211,6 +221,8 @@ expr' = "expression (prime)" ?> choice
   [ LInt  <$> integer
   , LChar <$> charLiteral
   , LStr  <$> stringLiteral
+  , symbol "True"  >> pure (LBool True)
+  , symbol "False" >> pure (LBool False)
   , nullaryOp
   , unaryOp
   , lambda
@@ -232,7 +244,7 @@ adtDecl = "data declaration" ?> do
   name <- tconId
   _ <- symbol "="
   branches <- sepBy1 (branch $ TCon name) (symbol "|")
-  _ <- newline
+  _ <- symbol ";"
   pure $ ADTDecl name branches
 
   where branch :: Type -> Parser (VConIdentifier, Type)
@@ -248,6 +260,7 @@ fnDecl = "function declaration" ?> do
   (ty, bindings) <- parseType
   _ <- symbol "="
   body <- expr
+  _ <- symbol ";"
   pure $ FnDecl name ty bindings body
 
 decl :: Parser Decl

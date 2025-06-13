@@ -27,7 +27,7 @@ data IOPrimOp
 
 -- Core data types
 data Type
-  = TInt | TChar | TStr
+  = TInt | TChar | TStr | TBool
   | Fn [Type] Type
   | TCon TConIdentifier
   | PrimIOTy Type | TUnit
@@ -43,6 +43,7 @@ data Pattern
   | PIntLit Integer
   | PCharLit Char
   | PStrLit String
+  | PBoolLit Bool
   | PWildcard
   deriving (Eq, Show)
 
@@ -50,9 +51,11 @@ data Op
   = Plus
   | Mult
   | Minus
+  | NumEq
   | StrLen
   | StrHead
   | StrTail
+  | StrEq
   | IOP IOPrimOp
   deriving (Eq, Show)
 
@@ -60,7 +63,7 @@ data Expr
   = Var ValueIdentifier
   | Abs [TypeBinding] Expr
   | App Expr [Expr]
-  | LInt Integer | LChar Char | LStr String
+  | LInt Integer | LChar Char | LStr String | LBool Bool
   | Prim Op
   | LetData TConIdentifier [(VConIdentifier, Type)] Expr
   | EVCon VConIdentifier
@@ -82,7 +85,7 @@ data VIOPrim
   deriving (Eq, Show)
 
 data Value
-  = VInt Integer | VChar Char | VStr String
+  = VInt Integer | VChar Char | VStr String | VBool Bool
   | VLamClosure [ValueIdentifier] Expr EvalContext
   | VRecClosure ValueIdentifier [ValueIdentifier] Expr EvalContext
   | VCon VConIdentifier
@@ -94,6 +97,7 @@ instance Show Value where
   show (VInt n)  = show n
   show (VChar c) = show c
   show (VStr s) = show s
+  show (VBool b) = show b
   show (VLamClosure args body env) = "lambda{"++show args++". "++show body++" -| "++show env++"}"
   show (VRecClosure name args body env) = "rec["++name++"]{"++show args++". "++show body++" -| "++show env++"}"
   show (VCon name) = name

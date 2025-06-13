@@ -24,9 +24,11 @@ checkPattern :: Context -> Type -> Pattern -> Either [TypeCheckError] TypeContex
 checkPattern _ TInt  (PIntLit  _) = Right []
 checkPattern _ TChar (PCharLit _) = Right []
 checkPattern _ TStr  (PStrLit  _) = Right []
+checkPattern _ TBool (PBoolLit _) = Right []
 checkPattern _ ty (PIntLit  _) = Left [TypeMismatch TInt  ty]
 checkPattern _ ty (PCharLit _) = Left [TypeMismatch TChar ty]
 checkPattern _ ty (PStrLit _)  = Left [TypeMismatch TStr  ty]
+checkPattern _ ty (PBoolLit _)  = Left [TypeMismatch TStr  ty]
 
 checkPattern _ ty (PVar x)  = Right [(x, ty)]
 checkPattern _ _  PWildcard = Right []
@@ -67,20 +69,24 @@ synth ctx (App f xs) = case (synth ctx f, traverse (synth ctx) xs) of
   (Right (Fn args r), Right xts) ->
     if xts == args
     then Right r
-    else Left [UNPORTEDERROR "Function argument mismatch in application"]
-  (Right ft, Right _) -> Left [NonFunctionAppHead ft]
+    else Left [UNPORTEDERROR $ "Function argument mismatch in application: " ++ show f ++ show xs ++ "; " ++ show args ++ "; " ++ show xts]
+  --(Right ft, Right _) -> Left [NonFunctionAppHead ft]
+  (Right ft, Right _) -> Left [UNPORTEDERROR $ show f ++ "; " ++ show xs]
 
 synth _ (LInt _) = Right TInt
 synth _ (LChar _) = Right TChar
 synth _ (LStr _) = Right TStr
+synth _ (LBool _) = Right TBool
 
 synth _ (Prim Plus)  = Right $ Fn [TInt, TInt] TInt
 synth _ (Prim Mult)  = Right $ Fn [TInt, TInt] TInt
 synth _ (Prim Minus) = Right $ Fn [TInt, TInt] TInt
+synth _ (Prim NumEq) = Right $ Fn [TInt, TInt] TBool
 
 synth _ (Prim StrLen)  = Right $ Fn [TStr] TInt
 synth _ (Prim StrHead) = Right $ Fn [TStr] TChar
 synth _ (Prim StrTail) = Right $ Fn [TStr] TStr
+synth _ (Prim StrEq)   = Right $ Fn [TStr, TStr] TBool
 
 synth _ (Prim (IOP GetLine))  = Right $ PrimIOTy TStr
 synth _ (Prim (IOP Print))    = Right $ Fn [TStr] (PrimIOTy TStr)  -- Should be unit, but since we don't have polymorphism...
