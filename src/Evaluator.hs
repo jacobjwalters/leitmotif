@@ -18,6 +18,12 @@ match (VInt n) (PIntLit n')
 match (VChar c) (PCharLit c')
   | c == c'   = Just []
   | otherwise = Nothing
+match (VStr s) (PStrLit s')
+  | s == s'   = Just []
+  | otherwise = Nothing
+match (VBool b) (PBoolLit b')
+  | b == b'   = Just []
+  | otherwise = Nothing
 
 match (VData name []) (PCon name' [])
   | name == name' = Just []
@@ -47,17 +53,19 @@ eval env (App (Prim op) xs) = do
     (Plus,  [VInt x, VInt y]) -> Right $ VInt $ x + y
     (Mult,  [VInt x, VInt y]) -> Right $ VInt $ x * y
     (Minus, [VInt x, VInt y]) -> Right $ VInt $ x - y
+    (NumEq, [VInt x, VInt y]) -> Right $ VBool $ x == y
 
     (StrLen,  [VStr s]) -> Right $ VInt $ toInteger $ length s
     (StrHead, [VStr s])  -> Right $ VChar $ head s
     (StrTail, [VStr ""]) -> Right $ VStr  $ ""
     (StrTail, [VStr s])  -> Right $ VStr  $ tail s
+    (StrEq,   [VStr s1, VStr s2]) -> Right $ VBool $ s1 == s2
 
     (IOP Print, [VStr s]) -> Right $ VIOP $ VPrint s
     (IOP ReadFile, [VStr s]) -> Right $ VIOP $ VReadFile s
     (IOP IOSeq, [VIOP l, VIOP r]) -> do
       Right $ VIOP $ VIOSeq l r
-    _ -> Left TypeError
+    --_ -> Left TypeError
 
 eval env (App f xs) = do
   xs' <- traverse (eval env) xs
