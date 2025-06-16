@@ -234,7 +234,7 @@ expr' = "expression (prime)" ?> choice
 expr :: Parser Expr
 expr = "expression" ?> choice
   [ try binaryOp
-  , try $ App <$> appable <*> some expr
+  , try $ App <$> appable <*> some expr'
   , expr'
   ]
 
