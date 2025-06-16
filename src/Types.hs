@@ -137,7 +137,7 @@ data TypeCheckError
   | UnknownVarName ValueIdentifier
   | TypeMismatch Type Type
 
-  | NonFunctionAppHead Type [Type]
+  | NonFunctionAppHead Type [Expr]
 
   | DuplicateTConDef TConIdentifier
   | DuplicateVConDef VConIdentifier
@@ -157,7 +157,7 @@ instance Show TypeCheckError where
   show (AnnotateWithName name err) = name ++ ": " ++ show err
   show (UnknownVarName name) = "Unknown variable name: " ++ name
   show (TypeMismatch ex got) = "Type mismatch: expected " ++ show ex ++ ", got " ++ show got
-  show (NonFunctionAppHead ty tys) = "Non-function type in head position for App: " ++ show ty ++ ", supplied with " ++ show tys
+  show (NonFunctionAppHead ty xs) = "Non-function type in head position for App: " ++ show ty ++ ", supplied with " ++ show xs
   show (DuplicateTConDef name) = "Type constructor already defined: " ++ name
   show (DuplicateVConDef name) = "Value constructor already defined: in " ++ name
   show (IllTypedVCon name) = "Ill typed value constructor: in " ++ name
@@ -168,7 +168,6 @@ instance Show TypeCheckError where
 
 data EvalError
   = NonExhaustivePatternMatch Value
-  | MatchingOnNonVCon Value
 
   -- Only for evalProgram
   | NoMain
@@ -178,10 +177,23 @@ data EvalError
   | ScopeError ValueIdentifier
   | UnappliedPrimOp Op
   | TypeError
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show EvalError where
+  show (NonExhaustivePatternMatch v) = "Non-exhaustive pattern match on value " ++ show v
+  show (NoMain) = "No main function found"
+  show (Can'tApplyNonClosureVConOrPrim v) = "Tried to evaluate " ++ show v ++ " as if it were a function. This indicates a type checker bug"
+  show (ScopeError name) = name ++ " is not in scope. This indicates a type checker bug"
+  show (UnappliedPrimOp op) = show op ++ " was not fully applied. This indicates a type checker bug"
+  show (TypeError) = "A type error was found at runtime. This is a type checker bug"
 
 data Error
   = PE  [ParseError]
   | TCE [TypeCheckError]
   | EvE [EvalError]
-  deriving (Show)
+
+
+instance Show Error where
+  show (PE errs) = show errs
+  show (TCE errs) = "Type Errors:\n" ++ unlines (map show errs) ++ "\n"
+  show (EvE errs) = "Evaluation errors:\n" ++ unlines (map show errs) ++ "\n"

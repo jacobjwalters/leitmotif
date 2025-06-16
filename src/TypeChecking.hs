@@ -69,9 +69,8 @@ synth ctx (App f xs) = case (synth ctx f, traverse (synth ctx) xs) of
   (Right (Fn args r), Right xts) ->
     if xts == args
     then Right r
-    else Left [UNPORTEDERROR $ "Function argument mismatch in application: " ++ show f ++ show xs ++ "; " ++ show args ++ "; " ++ show xts]
-  --(Right ft, Right _) -> Left [NonFunctionAppHead ft]
-  (Right ft, Right _) -> Left [UNPORTEDERROR $ show f ++ "; " ++ show xs]
+    else Left [UNPORTEDERROR $ "Function argument mismatch in application: " ++ show f ++ show xs ++ "; " ++ show args ++ "; " ++ show xts ++ "\t\t" ++ show ctx]
+  (Right ft, Right _) -> Left [NonFunctionAppHead ft xs]
 
 synth _ (LInt _) = Right TInt
 synth _ (LChar _) = Right TChar
@@ -108,7 +107,7 @@ synth (gamma, delta) (LetData tcon vcons e) =
      else Left [DuplicateTConDef $ show tcon]
 
 synth (gamma, _) (EVCon name) = case lookup name gamma of
-  Just t -> Right t
+  Just t -> Right x
   Nothing -> Left [UnknownVConName name]
 
 synth ctx (Match scrutinee ps) = do
@@ -143,13 +142,12 @@ synthDecl (gamma, delta) (ADTDecl tcon vcons) =
           else Left [DuplicateVConDef $ show tcon]  -- TODO: !!
      else Left [DuplicateTConDef $ show tcon]
 
-
 synthDecl (gamma, delta) (FnDecl name ty bindings body) = do
   let gamma' = (name, ty) : bindings ++ gamma
   ty' <- synth (gamma', delta) body
   if retType ty == ty'
     then Right (gamma', delta)
-    else Left [IllTypedFnDecl name]
+    else Left [IllTypedFnDecl name (retType ty) ty']
 
 synthProgram :: Context -> Program -> Either [TypeCheckError] Context
 synthProgram ctx [] = Right ctx
