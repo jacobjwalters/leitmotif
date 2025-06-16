@@ -6,6 +6,8 @@ import Control.Monad.Reader
 import Control.Monad.State.Strict
 -}
 
+import Data.List (intercalate)
+
 import Text.Trifecta.Result (ErrInfo)
 
 -- Identifiers
@@ -31,7 +33,18 @@ data Type
   | Fn [Type] Type
   | TCon TConIdentifier
   | PrimIOTy Type | TUnit
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show Type where
+  show TInt = "Int"
+  show TChar = "Char"
+  show TStr = "Str"
+  show TBool = "Bool"
+  show (Fn [] r) = show r
+  show (Fn as r) = intercalate " -> " (map show as) ++ " -> " ++ show r
+  show (TCon name) = name
+  show (PrimIOTy ty) = "IO " ++ show ty
+  show TUnit = "()"
 
 retType :: Type -> Type
 retType (Fn _ r) = r
