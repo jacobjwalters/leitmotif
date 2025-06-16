@@ -137,9 +137,7 @@ data TypeCheckError
   | UnknownVarName ValueIdentifier
   | TypeMismatch Type Type
 
-  | NonFunctionAppHead Type
-  | PrimOpTypeMismatch Op Type Type
-  | PrimOpAppMismatch Op Type
+  | NonFunctionAppHead Type [Type]
 
   | DuplicateTConDef TConIdentifier
   | DuplicateVConDef VConIdentifier
@@ -147,13 +145,26 @@ data TypeCheckError
 
   | UnknownVConName VConIdentifier
 
-  | IllTypedFnDecl ValueIdentifier
+  | IllTypedFnDecl ValueIdentifier Type Type
 
   -- These should not be reachable (since they would produce parse errors first)
   | EmptyCaseClauseList
 
   | UNPORTEDERROR String
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show TypeCheckError where
+  show (AnnotateWithName name err) = name ++ ": " ++ show err
+  show (UnknownVarName name) = "Unknown variable name: " ++ name
+  show (TypeMismatch ex got) = "Type mismatch: expected " ++ show ex ++ ", got " ++ show got
+  show (NonFunctionAppHead ty tys) = "Non-function type in head position for App: " ++ show ty ++ ", supplied with " ++ show tys
+  show (DuplicateTConDef name) = "Type constructor already defined: " ++ name
+  show (DuplicateVConDef name) = "Value constructor already defined: in " ++ name
+  show (IllTypedVCon name) = "Ill typed value constructor: in " ++ name
+  show (UnknownVConName name) = "Unknown value constructor: in " ++ name
+  show (IllTypedFnDecl name ex got) = "Ill typed function declaration: " ++ name ++ " should have type " ++ show ex ++ ", but actually has type " ++ show got
+  show (EmptyCaseClauseList) = "Empty match clause list: This indicates a parser bug"
+  show (UNPORTEDERROR err) = err
 
 data EvalError
   = NonExhaustivePatternMatch Value
